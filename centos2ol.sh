@@ -465,6 +465,7 @@ case "$os_version" in
     7*)
         # Prior to switch this is a dependancy of the yum rpm, now we've switched we can remove it
         if rpm -q yum-plugin-fastestmirror; then
+            yum --disablerepo="*" --enablerepo="ol7_latest" swap yum yum
             yum erase -y yum-plugin-fastestmirror
         fi
         ;;
@@ -519,28 +520,28 @@ if "${reinstall_all_rpms}"; then
     fi
 fi
 
-echo "Sync successful. Switching default kernel to the UEK."
+echo "Sync successful. Do not switch default kernel to the UEK."
 
-arch=$(uname -m)
-uek_path=$(find /boot -name "vmlinuz-*.el${os_version}uek.${arch}")
-
-case "$os_version" in
-    7* | 8*)
-        # Installing current latest kernel-uek on current latest CentOS 8.3 will
-        #  cause a dracut coredump during the posttrans scriptlet leaving a system unbootable.
-        #  Cause not investigated but for a temporary workaround, reinstall kernel-uek now that we have OL userland
-        yum reinstall -y kernel-uek
-        if [ -d /sys/firmware/efi ]; then
-            grub2-mkconfig -o /boot/efi/EFI/redhat/grub.cfg
-        else
-            grub2-mkconfig -o /boot/grub2/grub.cfg
-        fi
-        grubby --set-default="${uek_path}"
-        ;;
-    6*)
-        grubby --set-default="${uek_path}"
-        ;;
-esac
+# arch=$(uname -m)
+# uek_path=$(find /boot -name "vmlinuz-*.el${os_version}uek.${arch}")
+#
+# case "$os_version" in
+#     7* | 8*)
+#         # Installing current latest kernel-uek on current latest CentOS 8.3 will
+#         #  cause a dracut coredump during the posttrans scriptlet leaving a system unbootable.
+#         #  Cause not investigated but for a temporary workaround, reinstall kernel-uek now that we have OL userland
+#         yum reinstall -y kernel-uek
+#         if [ -d /sys/firmware/efi ]; then
+#             grub2-mkconfig -o /boot/efi/EFI/redhat/grub.cfg
+#         else
+#             grub2-mkconfig -o /boot/grub2/grub.cfg
+#         fi
+#         grubby --set-default="${uek_path}"
+#         ;;
+#     6*)
+#         grubby --set-default="${uek_path}"
+#         ;;
+# esac
 
 echo "Removing yum cache"
 rm -rf /var/cache/{yum,dnf}
